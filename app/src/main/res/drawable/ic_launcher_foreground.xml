@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ícono adaptable (108×108, zona segura de 66 al centro): pantalla con un "play", en el color de marca. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Pantalla -->
+    <path
+        android:pathData="M37,37h34a5,5 0,0 1,5 5v20a5,5 0,0 1,-5 5h-34a5,5 0,0 1,-5 -5v-20a5,5 0,0 1,5 -5z"
+        android:strokeWidth="4"
+        android:strokeColor="@color/brand"
+        android:strokeLineJoin="round" />
+    <!-- Pie -->
+    <path
+        android:pathData="M45,74h18"
+        android:strokeWidth="4"
+        android:strokeColor="@color/brand"
+        android:strokeLineCap="round" />
+    <!-- Play -->
+    <path
+        android:fillColor="@color/brand"
+        android:pathData="M49,45.5v13l11,-6.5z" />
+</vector>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fondo oscuro de la web (variable "background"). El color de marca ("brand") lo define build.gradle.kts. -->
+    <color name="background">#FF0F1115</color>
+    <color name="icon_background">#FF161920</color>
+</resources>

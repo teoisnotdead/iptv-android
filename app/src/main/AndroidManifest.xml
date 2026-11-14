@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- usesCleartextTraffic: los paneles Xtream y sus logos suelen servirse por http:// -->
+    <application
+        android:name=".IptvApp"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Iptv"
+        android:usesCleartextTraffic="true">
+
+        <!-- Solo horizontal (en sus dos sentidos): la app está pensada para ver TV, no para usarse en vertical.
+             configChanges: girar 180° o cambiar de ventana no recrea la actividad, así el canal en curso no se reinicia. -->
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden|uiMode"
+            android:screenOrientation="sensorLandscape"
+            android:supportsPictureInPicture="true"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- configChanges: girar o entrar a picture-in-picture no debe recrear el reproductor -->
+        <activity
+            android:name=".player.PlayerActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden|uiMode"
+            android:exported="false"
+            android:screenOrientation="sensorLandscape"
+            android:supportsPictureInPicture="true" />
+    </application>
+</manifest>
