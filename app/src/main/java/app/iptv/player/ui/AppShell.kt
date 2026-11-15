@@ -54,6 +54,7 @@ import app.iptv.player.data.PanelException
 import app.iptv.player.data.accountProblem
 import app.iptv.player.ui.account.AccountScreen
 import app.iptv.player.ui.components.AppIcons
+import app.iptv.player.ui.components.BrandMark
 import app.iptv.player.ui.components.alpha
 import app.iptv.player.ui.live.LiveScreen
 import app.iptv.player.ui.search.SearchScreen
@@ -140,16 +141,21 @@ fun AppShell(graph: AppGraph, onAddAccount: () -> Unit) {
 
     CompositionLocalProvider(LocalImmersive provides immersive) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize().background(Palette.Background).systemBarsPadding()) {
+            // El símbolo va arriba de la barra lateral solo si cabe sin tocar el menú (en un teléfono horizontal no cabe).
+            val markFits = maxHeight >= 460.dp
             when {
                 // Video a pantalla completa o en ventana flotante: sin navegación.
                 immersive.value || pip.active -> Box(modifier = Modifier.fillMaxSize()) { content() }
                 // En horizontal la barra va al costado para no quitarle alto al video.
                 maxWidth > maxHeight && maxWidth >= 600.dp -> Row(modifier = Modifier.fillMaxSize()) {
-                    Column(
-                        modifier = Modifier.width(76.dp).fillMaxHeight().background(Palette.Sidebar).padding(vertical = 10.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
-                    ) {
-                        Section.entries.forEach { NavItem(it, it == section, Modifier.fillMaxWidth().height(62.dp)) { section = it } }
+                    Box(modifier = Modifier.width(76.dp).fillMaxHeight().background(Palette.Sidebar)) {
+                        if (markFits) BrandMark(Modifier.align(Alignment.TopCenter).padding(top = 18.dp).size(34.dp))
+                        Column(
+                            modifier = Modifier.fillMaxSize().padding(vertical = 10.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+                        ) {
+                            Section.entries.forEach { NavItem(it, it == section, Modifier.fillMaxWidth().height(62.dp)) { section = it } }
+                        }
                     }
                     Box(modifier = Modifier.width(1.dp).fillMaxHeight().background(Palette.Border))
                     Box(modifier = Modifier.weight(1f).fillMaxHeight()) { content() }

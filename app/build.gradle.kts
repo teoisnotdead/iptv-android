@@ -33,9 +33,9 @@ android {
         // panel.lock=true: versión de revendedor; el servidor queda fijo y el campo no se muestra.
         buildConfigField("String", "PANEL_URL", quoted(cfg("panel.url").trimEnd('/')))
         buildConfigField("boolean", "PANEL_LOCKED", (cfg("panel.lock") == "true" && cfg("panel.url").isNotEmpty()).toString())
-        buildConfigField("String", "SITE_NAME", quoted(cfg("brand.name", "IPTV")))
+        buildConfigField("String", "SITE_NAME", quoted(cfg("brand.name", "Lytra TV")))
         buildConfigField("String", "BRAND_COLOR", quoted(cfg("brand.color", "#a78bfa")))
-        resValue("string", "app_name", cfg("brand.name", "IPTV"))
+        resValue("string", "app_name", cfg("brand.name", "Lytra TV"))
         // El ícono de la app usa el color de marca de la instalación.
         resValue("color", "brand", cfg("brand.color", "#a78bfa").let { if (Regex("^#[0-9a-fA-F]{6}$").matches(it)) it else "#a78bfa" })
     }

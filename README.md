@@ -38,7 +38,7 @@ panel.url=http://servidor.ejemplo.com:8080
 panel.lock=false
 
 # Marca (opcionales).
-brand.name=IPTV
+brand.name=Lytra TV
 brand.color=#a78bfa
 ```
 

@@ -2,5 +2,6 @@
 <resources>
     <!-- Fondo oscuro de la web (variable "background"). El color de marca ("brand") lo define build.gradle.kts. -->
     <color name="background">#FF0F1115</color>
-    <color name="icon_background">#FF161920</color>
+    <!-- Fondo de la pantalla de inicio de Android 12+: el tono medio del cuadro de Lytra. -->
+    <color name="icon_background">#FF1C1F28</color>
 </resources>
