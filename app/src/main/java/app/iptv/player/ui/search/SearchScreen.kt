@@ -30,7 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.iptv.player.AppGraph
 import app.iptv.player.data.FavKind
-import app.iptv.player.domain.normalize
+import app.iptv.player.domain.SearchIndex
+import app.iptv.player.domain.fold
 import app.iptv.player.domain.toPoster
 import app.iptv.player.ui.components.AppIcons
 import app.iptv.player.ui.components.ChannelCard
@@ -70,16 +71,17 @@ fun SearchScreen(graph: AppGraph, onOpenChannel: (Int) -> Unit) {
     LaunchedEffect(Unit) { if (query.isEmpty()) runCatching { focus.requestFocus() } }
 
     // Nombres normalizados una sola vez por lista (las listas pueden tener decenas de miles de ítems).
-    val liveKeys = remember(live.data) { live.data?.map { normalize(it.name) }.orEmpty() }
-    val movieKeys = remember(movies.data) { movies.data?.map { normalize(it.name) }.orEmpty() }
-    val seriesKeys = remember(series.data) { series.data?.map { normalize(it.name) }.orEmpty() }
+    val liveIndex = remember(live.data) { SearchIndex(live.data.orEmpty(), { it.name }) }
+    val movieIndex = remember(movies.data) { SearchIndex(movies.data.orEmpty(), { it.name }) }
+    val seriesIndex = remember(series.data) { SearchIndex(series.data.orEmpty(), { it.name }) }
     val catNames = remember(liveCats.data) { liveCats.data.orEmpty().associate { it.id to it.name } }
 
-    val q = normalize(query.trim())
+    val q = fold(query)
     val ready = q.length >= MIN_CHARS
-    val liveHits = remember(q, liveKeys) { if (!ready) emptyList() else live.data.orEmpty().filterIndexed { i, _ -> liveKeys[i].contains(q) } }
-    val movieHits = remember(q, movieKeys) { if (!ready) emptyList() else movies.data.orEmpty().filterIndexed { i, _ -> movieKeys[i].contains(q) } }
-    val seriesHits = remember(q, seriesKeys) { if (!ready) emptyList() else series.data.orEmpty().filterIndexed { i, _ -> seriesKeys[i].contains(q) } }
+    // Sin tildes ni signos, todas las palabras y primero lo más parecido (ver domain/Search.kt).
+    val liveHits = remember(q, liveIndex) { liveIndex.search(if (ready) q else "", LIMIT) }
+    val movieHits = remember(q, movieIndex) { movieIndex.search(if (ready) q else "", LIMIT) }
+    val seriesHits = remember(q, seriesIndex) { seriesIndex.search(if (ready) q else "", LIMIT) }
     val loading = live.loading || movies.loading || series.loading
     val errors = listOfNotNull(live.error, movies.error, series.error).distinct()
 
@@ -101,12 +103,13 @@ fun SearchScreen(graph: AppGraph, onOpenChannel: (Int) -> Unit) {
                     "Busca en todo el catálogo",
                     "Escribe al menos $MIN_CHARS letras: canales, películas y series a la vez.",
                 )
-                liveHits.isEmpty() && movieHits.isEmpty() && seriesHits.isEmpty() -> if (!loading) {
+                liveHits.total + movieHits.total + seriesHits.total == 0 -> if (!loading) {
                     EmptyState(AppIcons.SearchOff, "Sin resultados", "No hay canales, películas ni series con “${query.trim()}”.")
                 }
                 else -> LazyColumn(contentPadding = PaddingValues(bottom = 24.dp), modifier = Modifier.fillMaxSize()) {
-                    section("Canales", liveHits.size, "canales", "canal") {
-                        items(liveHits.take(LIMIT), key = { it.streamId }) { c ->
+                    val channels: LazyListScope.() -> Unit = {
+                    section("Canales", liveHits.total, "canales", "canal") {
+                        items(liveHits.items, key = { it.streamId }) { c ->
                             Box(modifier = Modifier.width(300.dp)) {
                                 ChannelCard(
                                     channel = c,
@@ -119,20 +122,29 @@ fun SearchScreen(graph: AppGraph, onOpenChannel: (Int) -> Unit) {
                             }
                         }
                     }
-                    section("Películas", movieHits.size, "películas", "película") {
-                        items(movieHits.take(LIMIT), key = { it.streamId }) { m ->
+                    }
+                    val films: LazyListScope.() -> Unit = {
+                    section("Películas", movieHits.total, "películas", "película") {
+                        items(movieHits.items, key = { it.streamId }) { m ->
                             Box(modifier = Modifier.width(128.dp)) {
                                 PosterCard(m.toPoster(), favorite = m.streamId in favorites[FavKind.MOVIE].orEmpty(), onOpen = { openMovie = m.streamId })
                             }
                         }
                     }
-                    section("Series", seriesHits.size, "series", "serie") {
-                        items(seriesHits.take(LIMIT), key = { it.seriesId }) { s ->
+                    }
+                    val shows: LazyListScope.() -> Unit = {
+                    section("Series", seriesHits.total, "series", "serie") {
+                        items(seriesHits.items, key = { it.seriesId }) { s ->
                             Box(modifier = Modifier.width(128.dp)) {
                                 PosterCard(s.toPoster(), favorite = s.seriesId in favorites[FavKind.SERIES].orEmpty(), onOpen = { openSeries = s.seriesId })
                             }
                         }
                     }
+                    }
+                    // Primero la fila con el resultado más parecido ("nier": la serie, no las películas que solo lo contienen).
+                    listOf(liveHits.best to channels, movieHits.best to films, seriesHits.best to shows)
+                        .sortedBy { it.first }
+                        .forEach { (_, row) -> row() }
                 }
             }
         }

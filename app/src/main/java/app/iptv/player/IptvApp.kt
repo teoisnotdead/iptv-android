@@ -36,6 +36,12 @@ class AppGraph(context: Context) {
         }
         .build()
 
+    /**
+     * Para el video: espera más entre datos. Hay servidores de películas y series que entregan más lento
+     * de lo que se reproduce y se quedan callados más de 30 s (caso NieR:Automata, serie 2132).
+     */
+    val videoHttp: OkHttpClient = http.newBuilder().readTimeout(90, TimeUnit.SECONDS).build()
+
     val api = XtreamApi(http)
     val session = SessionStore(context)
     private val disk = DiskCache(context)

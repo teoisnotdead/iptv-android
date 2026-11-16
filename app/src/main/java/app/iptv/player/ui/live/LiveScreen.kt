@@ -37,7 +37,7 @@ import app.iptv.player.AppGraph
 import app.iptv.player.data.FavKind
 import app.iptv.player.data.LiveStream
 import app.iptv.player.data.StreamKind
-import app.iptv.player.domain.normalize
+import app.iptv.player.domain.SearchIndex
 import app.iptv.player.player.PlaybackSession
 import app.iptv.player.ui.ImmersiveEffect
 import app.iptv.player.ui.LocalPip
@@ -81,13 +81,11 @@ fun LiveScreen(graph: AppGraph, openChannel: Int? = null, onChannelOpened: () ->
     val current = currentId?.let { byId[it] }
     val watching = current != null
 
-    // Busca por nombre o por nombre de categoría.
-    val keys = remember(streams, catNames) { streams.map { normalize(it.name + "\n" + catNames[it.categoryId].orEmpty()) } }
+    // Busca por nombre o por nombre de categoría; primero lo más parecido (ver domain/Search.kt).
+    val searchIndex = remember(streams, catNames) { SearchIndex(streams, { it.name }, { catNames[it.categoryId].orEmpty() }) }
     val q = query.trim()
     val searching = q.isNotEmpty()
-    val filtered = remember(streams, keys, q) {
-        if (q.isEmpty()) streams else normalize(q).let { n -> streams.filterIndexed { i, _ -> keys[i].contains(n) } }
-    }
+    val filtered = remember(streams, searchIndex, q) { if (q.isEmpty()) streams else searchIndex.search(q).items }
 
     // Favoritos en el orden en que se agregaron (el último primero); los que ya no están en el panel se omiten.
     val favoriteStreams = remember(favoriteIds, byId) { favoriteIds.mapNotNull { byId[it] } }

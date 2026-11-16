@@ -10,7 +10,8 @@ Nace como versión nativa de la web del mismo servicio, para lo que el navegador
 - **TV en vivo:** carpetas | canales | previsualizador en tres columnas. Ampliar el canal no lo recarga. Selector **HLS / TS** (si HLS falla pasa solo a TS), guía ahora/después, favoritos y ventana flotante (picture-in-picture).
 - **Películas y series:** pósters por carpeta, ficha, temporadas y episodios. Incluye **Continuar** donde quedaste, episodios marcados como vistos y paso automático al siguiente.
 - **Reproductor:** botones de **Audio** y **Subtítulos**; la elección se recuerda para los próximos videos.
-- **Búsqueda global:** canales, películas y series a la vez.
+- **Búsqueda global:** canales, películas y series a la vez, sin importar tildes, mayúsculas ni signos ("spider man" encuentra "Spider-Man"), con lo más parecido primero. El buscador de cada catálogo usa las mismas reglas.
+- **Servidores lentos:** si una película o episodio se corta o el servidor deja de mandar datos, reintenta solo desde donde iba antes de avisar.
 - **Catálogo guardado en el dispositivo:** abre al instante y se renueva cada 6 horas (o con "Actualizar ahora" en Cuenta).
 - Solo horizontal. Textos en español.
 

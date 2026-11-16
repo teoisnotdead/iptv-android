@@ -23,7 +23,7 @@ import app.iptv.player.AppGraph
 import app.iptv.player.data.Category
 import app.iptv.player.data.FavKind
 import app.iptv.player.domain.PosterItem
-import app.iptv.player.domain.normalize
+import app.iptv.player.domain.SearchIndex
 import app.iptv.player.ui.components.AppIcons
 import app.iptv.player.ui.components.CatalogBrowser
 import app.iptv.player.ui.components.EmptyState
@@ -59,12 +59,11 @@ fun PosterCatalog(
     val favorites by graph.favorites.all.collectAsState()
     val favoriteIds = favorites[kind].orEmpty()
 
-    val keys = remember(all, catNames) { all.map { normalize(it.name + "\n" + catNames[it.categoryId].orEmpty()) } }
+    // Por nombre o por nombre de categoría; primero lo más parecido (ver domain/Search.kt).
+    val index = remember(all, catNames) { SearchIndex(all, { it.name }, { catNames[it.categoryId].orEmpty() }) }
     val q = query.trim()
     val searching = q.isNotEmpty()
-    val filtered = remember(all, keys, q) {
-        if (q.isEmpty()) all else normalize(q).let { n -> all.filterIndexed { i, _ -> keys[i].contains(n) } }
-    }
+    val filtered = remember(all, index, q) { if (q.isEmpty()) all else index.search(q).items }
     val byId = remember(all) { all.associateBy { it.id } }
     val favoriteItems = remember(favoriteIds, byId) { favoriteIds.mapNotNull { byId[it] } }
     val visible = remember(onlyFavorites, filtered, favoriteItems) {

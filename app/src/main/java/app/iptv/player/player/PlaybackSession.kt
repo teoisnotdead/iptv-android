@@ -29,7 +29,8 @@ import app.iptv.player.graph
  * reproductor a pantalla completa y el previsualizador de TV en vivo.
  * - Usa los decodificadores del dispositivo y, si falta alguno de audio (AC-3, E-AC-3, DTS…), FFmpeg por software.
  * - En vivo: intenta HLS y, si falla, cae a MPEG-TS; ante cortes reintenta solo.
- * - Película/episodio: retoma donde quedó y va guardando el avance.
+ * - Película/episodio: retoma donde quedó y va guardando el avance. Si el servidor se corta o se queda
+ *   sin mandar datos, reintenta solo desde donde iba (hasta 3 veces seguidas) antes de avisar.
  * - Aplica el idioma de audio y subtítulos que el usuario eligió la última vez.
  * `release()` suelta la conexión con el panel; hay que llamarlo siempre al salir de pantalla.
  */
@@ -93,7 +94,7 @@ class PlaybackSession(
         val renderers = DefaultRenderersFactory(context)
             .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
             .setEnableDecoderFallback(true)
-        val sources = DefaultMediaSourceFactory(OkHttpDataSource.Factory(graph.http))
+        val sources = DefaultMediaSourceFactory(OkHttpDataSource.Factory(graph.videoHttp))
 
         val exo = ExoPlayer.Builder(context, renderers).setMediaSourceFactory(sources).build()
         val prefs = graph.trackPrefs
@@ -193,6 +194,12 @@ class PlaybackSession(
                     start()
                 }
                 isLive -> retryOrFail(detail)
+                // Película o episodio con un servidor lento o que cortó: se retoma solo desde donde iba.
+                isNetwork(e) && retries < MAX_VOD_RETRIES -> {
+                    retries++
+                    release() // deja la posición en `resumeAt`
+                    handler.postDelayed({ start() }, 1500L * retries)
+                }
                 else -> {
                     release()
                     error = describe(e, detail)
@@ -200,6 +207,12 @@ class PlaybackSession(
             }
         }
     }
+
+    /** Falla de red (sin conexión, corte o el servidor dejó de mandar datos): reintentar puede servir. */
+    private fun isNetwork(e: PlaybackException): Boolean =
+        e.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED ||
+            e.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT ||
+            e.errorCode == PlaybackException.ERROR_CODE_IO_UNSPECIFIED
 
     /** Código HTTP con que el servidor rechazó el stream, si ese fue el motivo. */
     private fun httpStatus(e: PlaybackException): Int? =
@@ -236,6 +249,7 @@ class PlaybackSession(
 
     private companion object {
         const val MAX_LIVE_RETRIES = 3
+        const val MAX_VOD_RETRIES = 3
         const val SAVE_EVERY_MS = 15_000L
     }
 }
